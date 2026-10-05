@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Trading Work Log</title>
+<meta name="theme-color" content="#1c5fa8">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27%3E%3Ctext y=%27.9em%27 font-size=%2790%27%3E%F0%9F%93%88%3C/text%3E%3C/svg%3E">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#eef2f8;--card:#fff;--ink:#0f2942;--mute:#5a7290;--line:#d3dfec;--acc:#1c5fa8;--accink:#fff;--stop:#c2410c;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0b1622;--card:#132132;--ink:#e7eef7;--mute:#8ea3bd;--line:#25384f;--acc:#4f8fd9;--accink:#06131f;--stop:#fb923c}}
+:root[data-theme="dark"]{--bg:#0b1622;--card:#132132;--ink:#e7eef7;--mute:#8ea3bd;--line:#25384f;--acc:#4f8fd9;--accink:#06131f;--stop:#fb923c}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 Sora,system-ui,-apple-system,"Segoe UI",sans-serif}
+.hamburger{background:none;border:1px solid var(--line);border-radius:8px;width:38px;height:38px;font-size:1.1rem;cursor:pointer;color:var(--ink)}
+.sidebar{position:fixed;top:0;left:0;height:100%;width:240px;background:var(--card);border-right:1px solid var(--line);transform:translateX(-100%);transition:transform .25s ease;z-index:50;padding:env(safe-area-inset-top,0px) 0 0;display:flex;flex-direction:column}
+.sidebar.open{transform:translateX(0)}
+.sidebar h3{padding:18px 16px 10px;margin:0;font-size:1rem}
+.sidebar nav a{display:block;padding:12px 16px;color:var(--ink);text-decoration:none;font-weight:600;border-left:3px solid transparent}
+.sidebar nav a.active{background:var(--bg);border-left-color:var(--acc);color:var(--acc)}
+.sidebar-overlay{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:40;opacity:0;pointer-events:none;transition:opacity .25s ease}
+.sidebar-overlay.open{opacity:1;pointer-events:auto}
+header{display:flex;justify-content:space-between;align-items:center;gap:12px;max-width:980px;margin:0 auto;padding:20px 16px 8px}
+h1{font-size:1.4rem;margin:0}
+h2{font-size:1.05rem;margin:0 0 12px}
+main{max-width:980px;margin:0 auto;padding:8px 16px 40px;display:grid;gap:16px;grid-template-columns:1fr 1fr}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px}
+.wide{grid-column:1/-1}
+@media(max-width:720px){main{grid-template-columns:1fr}}
+button,input,select{font:inherit;color:inherit}
+input,select{background:transparent;border:1px solid var(--line);border-radius:8px;padding:9px 10px;min-width:0}
+select option{background:var(--card);color:var(--ink)}
+input:focus-visible,button:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+button{cursor:pointer;border:1px solid var(--line);background:transparent;border-radius:8px;padding:9px 14px}
+.pri{background:var(--acc);color:var(--accink);border-color:var(--acc);font-weight:600}
+.stop{background:var(--stop);border-color:var(--stop);color:#fff;font-weight:600}
+button:disabled{opacity:.5;cursor:default}
+.row{display:flex;gap:8px;margin-bottom:10px}
+.row input:first-child{flex:1}
+.row .h{width:88px}
+ul{list-style:none;margin:0;padding:0}
+li{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 0;border-top:1px solid var(--line)}
+li small{color:var(--mute)}
+li button{padding:3px 9px;color:var(--mute)}
+.done{text-decoration:line-through;color:var(--mute)}
+.pl-pos{color:#0e8a4e;font-weight:700}
+.pl-neg{color:#dc2626;font-weight:700}
+:root[data-theme="dark"] .pl-neg{color:#ff4d4d}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]) .pl-neg{color:#ff4d4d}}
+input[type=checkbox]{width:18px;height:18px;padding:0;accent-color:var(--acc)}
+.sum{color:var(--mute);margin:10px 0 0;font-size:.9rem}
+.empty{color:var(--mute);padding:6px 0}
+label{color:var(--mute);font-size:.85rem;display:block;margin-bottom:3px}
+.range{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
+#report{display:none}
+body:not([data-view="home"]) .homeOnly{display:none}
+body:not([data-view="withdraw"]) .withdrawOnly{display:none}
+body:not([data-view="report"]) .reportOnly{display:none}
+#pinLock{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:var(--bg);padding:20px}
+#pinLock[hidden]{display:none}
+#pinLock .box{width:100%;max-width:320px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:22px;text-align:center}
+#pinLock input{width:100%;text-align:center;letter-spacing:.4em;font-size:1.4rem;margin:12px 0}
+#roBanner{display:none;grid-column:1/-1;padding:10px 12px;border:1px solid var(--line);border-radius:10px;font-size:.9rem}
+body[data-role="viewer"] #roBanner{display:block}
+body[data-role="viewer"] .editOnly,body[data-role="viewer"] #tasks button,body[data-role="viewer"] #trades button,body[data-role="viewer"] #wList button{display:none!important}
+.wthumb{width:56px;height:56px;object-fit:cover;border-radius:8px;border:1px solid var(--line);cursor:zoom-in}
+.wthumbs{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+table{width:100%;border-collapse:collapse;font-size:.92rem}
+th,td{text-align:left;padding:6px 8px;border-bottom:1px solid #999;vertical-align:top}
+.msg{font-size:.8rem;color:var(--mute);margin-top:8px;min-height:1em}
+.hidden{display:none!important}
+.photos-grid{display:flex;flex-wrap:wrap;gap:10px;margin-top:4px}
+.photo{position:relative;width:84px;text-align:center}
+.photo .frame{position:relative;width:84px;height:84px;border-radius:10px;overflow:hidden;border:1px solid var(--line);cursor:pointer}
+.photo .frame img{width:100%;height:100%;object-fit:cover;display:block}
+.photo time{display:block;font-size:.68rem;color:var(--mute);margin-top:3px}
+.photo .frame .photo-menu{position:absolute;inset:0;background:rgba(0,0,0,.72);display:none;flex-direction:column;align-items:center;justify-content:center;gap:6px}
+.photo .frame.open .photo-menu{display:flex}
+.photo .frame .photo-menu button{background:rgba(255,255,255,.15);color:#fff;border:none;border-radius:6px;padding:3px 10px;font-size:.7rem}
+#lightbox{position:fixed;inset:0;background:rgba(0,0,0,.85);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:24px;z-index:60}
+#lightbox img{max-width:100%;max-height:80vh;border-radius:10px;cursor:zoom-out}
+#lightbox .bar{display:flex;gap:10px}
+#lightbox button{background:rgba(255,255,255,.15);color:#fff;border-color:rgba(255,255,255,.3)}
+@media print{
+ body{background:#fff;color:#000;font-size:12pt}
+ header,main,.hamburger,#pinLock{display:none!important}
+ #report{display:block!important}
+ #report h1{font-size:18pt}#report h3{margin:16px 0 4px;font-size:13pt}
+ .day{break-inside:avoid;margin-bottom:14px}
+}
+</style>
+</head>
+<body data-view="home">
+<button class="hamburger" id="menuBtn" aria-label="Open menu" style="position:fixed;top:calc(env(safe-area-inset-top,0px) + 14px);left:14px;z-index:30">☰</button>
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+<aside class="sidebar" id="sidebar">
+ <h3>Menu</h3>
+ <nav>
+  <a href="#" class="active" data-nav="home">Trading Work Log</a>
+  <a href="#" data-nav="report">Daily Report</a>
+  <a href="#" data-nav="withdraw">Withdraw Proof</a>
+ </nav>
+</aside>
+<header>
+ <div style="display:flex;align-items:center;gap:10px;padding-left:40px"><span style="font-size:1.6rem" aria-hidden="true">📈</span><h1>Trading Work Log</h1></div>
+ <div style="display:flex;align-items:center;gap:8px">
+  <button id="saveAll" class="pri">Save</button>
+  <button id="theme" aria-label="Toggle dark mode">Dark / Light</button>
+ </div>
+</header>
+<p class="msg" id="saveMsg" style="max-width:980px;margin:0 auto;padding:0 16px;text-align:right"></p>
+<div id="pinLock"><div class="box"><h2 style="margin:0 0 4px">Enter PIN</h2><p class="msg" style="margin:0">This log is locked for editing.</p><input id="pinIn" type="password" inputmode="numeric" autocomplete="off" maxlength="8" aria-label="PIN"><button id="pinBtn" class="pri" style="width:100%">Unlock</button><p class="msg" id="pinMsg"></p></div></div>
+<main>
+ <div id="roBanner" role="status"></div>
+ <section class="card homeOnly">
+  <h2>Tasks completed</h2>
+  <div class="row editOnly"><input id="taskN" placeholder="Task name"></div>
+  <div class="row editOnly">
+   <button id="taskStartBtn" class="pri" style="flex:1">Start</button>
+   <button id="taskEndBtn" class="stop" style="flex:1" disabled>End</button>
+  </div>
+  <p class="msg" id="taskActiveMsg"></p>
+  <ul id="tasks"></ul>
+ </section>
+ <section class="card homeOnly">
+  <h2>Buy / Sell</h2>
+  <div class="row editOnly"><input id="curN" placeholder="Currency (e.g. USD)" style="max-width:140px;flex:none"></div>
+  <div class="row editOnly"><input id="buyN" class="h" type="number" min="0" step="0.01" placeholder="Buy" style="flex:none"><input id="sellN" class="h" type="number" min="0" step="0.01" placeholder="Sell" style="flex:none"><button id="addTrade" class="pri">Add</button></div>
+  <div class="photos-grid" id="tPending"></div>
+  <input id="tAddIn" type="file" accept="image/*" multiple class="hidden">
+  <p class="msg" id="tMsg"></p>
+  <ul id="trades"></ul>
+ </section>
+ <section class="card wide homeOnly editOnly">
+  <h2>Proof</h2>
+  <div class="row"><input id="photoIn" type="file" accept="image/*" multiple></div>
+  <div class="photos-grid" id="photos"></div>
+  <p class="msg" id="photoMsg"></p>
+ </section>
+ <section class="card wide withdrawOnly editOnly">
+  <h2>Withdraw Proof</h2>
+  <p class="msg" style="margin:-6px 0 12px">Log a payout and attach screenshot or receipt proof. Stored on this device.</p>
+  <div class="row"><input id="wProof" type="file" accept="image/*" multiple></div>
+  <div class="photos-grid" id="wPending"></div>
+  <div class="row" style="margin-top:10px"><button id="wAdd" class="pri">Add withdrawal</button></div>
+  <p class="msg" id="wMsg"></p>
+ </section>
+ <section class="card wide withdrawOnly">
+  <h2>Withdrawals</h2>
+  <ul id="wList"></ul>
+ </section>
+ <section class="reportOnly" style="display:none"><button id="pdf"></button><button id="print"></button><p class="msg" id="pdfMsg"></p></section>
+ <section class="card wide reportOnly">
+  <h2>Daily report preview</h2>
+  <div class="range">
+   <div><label for="from">From</label><input id="from" type="date"></div>
+   <div><label for="to">To</label><input id="to" type="date"></div>
+  </div>
+  <div id="reportPreview"></div>
+ </section>
+</main>
+<div id="report"></div>
+<div id="lightbox" class="hidden">
+ <img id="lightboxImg" alt="">
+ <div class="bar"><button id="lbDownload">Download</button><button id="lbClose">Close</button></div>
+ <p class="msg" id="lbMsg" style="color:#fff"></p>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+let data={days:{}},editIdx=-1;
+try{const s=localStorage.getItem('worklog');if(s)data=JSON.parse(s)}catch(e){}
+const saveLocal=()=>{try{localStorage.setItem('worklog',JSON.stringify(data));return true}catch(e){return false}};
+const save=()=>{if(isViewer)return false;const ok=saveLocal();queueShare();return ok};
+const key=d=>{const x=new Date(d);return x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0')};
+const today=key(Date.now());
+const day=k=>{const d=data.days[k]||(data.days[k]={tasks:[],trades:[]});if(!d.currency)d.currency='USD';if(!d.photos)d.photos=[];if(!d.withdrawals)d.withdrawals=[];if(d.active===undefined)d.active=null;return d};
+const hm=ms=>{const m=Math.round(ms/60000);return Math.floor(m/60)+'h '+String(m%60).padStart(2,'0')+'m'};
+const hh=h=>hm(h*3600000);
+const usd=(n,cur)=>(n<0?'-':'')+Math.abs(n).toFixed(2)+' '+(cur||'USD');
+const calcProfit=x=>(x.buy||0)-(x.sell||0);
+const tradePL=d=>d.trades.reduce((a,x)=>a+calcProfit(x),0);
+const clk=t=>new Date(t).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const timeToMin=t=>{const p=t.split(':');return (+p[0])*60+(+p[1])};
+const taskHours=(s,e)=>{let diff=timeToMin(e)-timeToMin(s);if(diff<=0)diff+=1440;return diff/60};
+const FULL='Storage is full — delete some photos or older entries to free up space.';
+const hideMenus=()=>document.querySelectorAll('.photo .frame.open').forEach(f=>f.classList.remove('open'));
+
+function render(){
+ const d=day(today);
+ if(document.activeElement!==$('curN'))$('curN').value=d.currency;
+ $('taskStartBtn').disabled=!!d.active;
+ $('taskEndBtn').disabled=!d.active;
+ if(d.active){
+  if(document.activeElement!==$('taskN'))$('taskN').value=d.active.n;
+  $('taskN').disabled=true;
+  $('taskActiveMsg').textContent='Started "'+d.active.n+'" at '+clk(d.active.startTs)+' — tap End when done.';
+ }else{$('taskN').disabled=false;$('taskActiveMsg').textContent=''}
+ $('tasks').innerHTML=d.tasks.length?d.tasks.map((t,i)=>editIdx===i
+  ?`<li><span class="row" style="margin:0;flex:1;flex-wrap:wrap"><input id="eN" value="${esc(t.n)}" style="flex:1;min-width:100px"><input id="eS" type="time" value="${t.start||''}"><input id="eE" type="time" value="${t.end||''}"></span><span><button data-a="save" data-i="${i}" class="pri">Save</button> <button data-a="cancel">Cancel</button></span></li>`
+  :`<li><label style="display:flex;gap:8px;align-items:center;flex:1;margin:0;color:inherit;font-size:inherit"><input type="checkbox" data-a="done" data-i="${i}" ${t.done?'checked':''}><span class="${t.done?'done':''}">${esc(t.n)} <small>${t.start&&t.end?t.start+'–'+t.end+' &middot; ':''}${hh(t.h)}</small></span></label><span><button data-a="edit" data-i="${i}">Edit</button> <button data-k="tasks" data-i="${i}" aria-label="Delete task">Delete</button></span></li>`).join(''):'<li class="empty">No tasks added today.</li>';
+ $('trades').innerHTML=d.trades.length?d.trades.map((x,i)=>{const p=calcProfit(x);return `<li style="align-items:flex-start"><div style="flex:1;min-width:0"><span>Buy ${usd(x.buy||0,d.currency)} &rarr; Sell ${usd(x.sell||0,d.currency)} <small class="${p>0?'pl-pos':(p<0?'pl-neg':'')}">${p>=0?'+':''}${usd(p,d.currency)}</small></span>${(x.photos&&x.photos.length)?`<div class="wthumbs">${x.photos.map((q,pi)=>`<span style="position:relative;display:inline-block"><img class="wthumb" src="${q.src}" alt="Trade photo ${pi+1}" data-t="view" data-i="${i}" data-p="${pi}"><button data-t="rm" data-i="${i}" data-p="${pi}" aria-label="Remove photo" style="position:absolute;top:-6px;right:-6px;width:20px;height:20px;padding:0;border-radius:50%;line-height:1;font-size:.8rem;background:var(--card)">&times;</button></span>`).join('')}</div>`:''}</div><span style="white-space:nowrap"><button data-t="add" data-i="${i}" aria-label="Add photo to trade">Photo</button> <button data-k="trades" data-i="${i}" aria-label="Delete trade">Delete</button></span></li>`}).join(''):'<li class="empty">No trades added yet.</li>';
+ $('photos').innerHTML=d.photos.length?d.photos.map((p,i)=>{const src=typeof p==='string'?p:p.src,t=typeof p==='object'&&p.time?p.time:null;return `<div class="photo"><div class="frame" data-a="menu" data-i="${i}"><img src="${src}" alt="Photo ${i+1}"><div class="photo-menu"><button data-a="viewphoto" data-i="${i}">View</button><button data-a="dlphoto" data-i="${i}">Save</button><button data-k="photos" data-i="${i}">Delete</button></div></div>${t?`<time>${clk(t)}</time>`:''}</div>`}).join(''):'<p class="empty">No proof yet.</p>';
+ renderReportPreview();
+}
+$('taskStartBtn').onclick=()=>{const n=$('taskN').value.trim();if(!n)return;day(today).active={n,startTs:Date.now()};save();render()};
+$('taskEndBtn').onclick=()=>{const d=day(today);if(!d.active)return;const s=d.active.startTs,e=Date.now(),h=(e-s)/3600000;if(h>0)d.tasks.push({n:d.active.n,start:clk(s),end:clk(e),h});d.active=null;$('taskN').value='';save();render()};
+let tPending=[],tTarget=-1;
+$('addTrade').onclick=()=>{const buy=parseFloat($('buyN').value)||0,sell=parseFloat($('sellN').value)||0;if(buy===0&&sell===0)return;day(today).trades.push({buy,sell,photos:tPending});tPending=[];$('buyN').value=$('sellN').value='';$('tMsg').textContent=save()?'':FULL;renderTPending();render()};
+$('curN').onchange=()=>{day(today).currency=$('curN').value.trim()||'USD';save();render()};
+document.addEventListener('click',e=>{
+ const a=e.target.closest('[data-a]');
+ if(a){const d=day(today),i=+a.dataset.i,x=a.dataset.a;
+  if(x==='menu'){const open=a.classList.contains('open');hideMenus();if(!open)a.classList.add('open');return}
+  if(x==='done'){d.tasks[i].done=a.checked;save();render();return}
+  if(x==='edit')editIdx=i;
+  if(x==='cancel')editIdx=-1;
+  if(x==='save'){const n=$('eN').value.trim(),s=$('eS').value,en=$('eE').value;if(n&&s&&en){d.tasks[i].n=n;d.tasks[i].start=s;d.tasks[i].end=en;d.tasks[i].h=taskHours(s,en);save()}editIdx=-1}
+  if(x==='viewphoto'){const p=d.photos[i];showLightbox(typeof p==='string'?p:p.src,i);hideMenus();return}
+  if(x==='dlphoto'){const p=d.photos[i];downloadPhoto(typeof p==='string'?p:p.src,i);hideMenus();return}
+  render();return}
+ const b=e.target.closest('[data-k]');
+ if(!b){hideMenus();return}
+ day(today)[b.dataset.k].splice(+b.dataset.i,1);save();render()});
+$('theme').onclick=()=>{const r=document.documentElement,dark=getComputedStyle(r).getPropertyValue('--bg').trim()==='#0b1622';r.dataset.theme=dark?'light':'dark'};
+const sidebar=$('sidebar'),overlay=$('sidebarOverlay');
+const closeMenu=()=>{sidebar.classList.remove('open');overlay.classList.remove('open')};
+$('menuBtn').onclick=()=>{sidebar.classList.add('open');overlay.classList.add('open')};
+overlay.onclick=closeMenu;
+sidebar.querySelectorAll('nav a').forEach(a=>a.onclick=e=>{e.preventDefault();closeMenu();sidebar.querySelectorAll('nav a').forEach(x=>x.classList.remove('active'));a.classList.add('active');
+ const v=a.dataset.nav;document.body.dataset.view=v;
+ if(v==='withdraw')renderWithdraw();
+ if(v==='report'){$('from').value=today;$('to').value=today;renderReportPreview()}
+ window.scrollTo({top:0,behavior:'smooth'})});
+$('saveAll').onclick=()=>{const ok=save(),m=$('saveMsg');m.textContent=ok?'Saved.':FULL;if(ok)setTimeout(()=>{if(m.textContent==='Saved.')m.textContent=''},2000)};
+
+let lbIdx=-1,lbSrc=null;
+function showLightbox(src,i,alt){lbIdx=i;lbSrc=alt?src:null;$('lbMsg').textContent='';$('lightboxImg').src=src;$('lightbox').classList.remove('hidden')}
+function closeLightbox(){$('lightbox').classList.add('hidden');$('lightboxImg').src=''}
+$('lightboxImg').onclick=closeLightbox;$('lbClose').onclick=closeLightbox;
+$('lbDownload').onclick=()=>{if(lbSrc){downloadPhoto(lbSrc,0,$('lbMsg'));return}if(lbIdx>-1){const p=day(today).photos[lbIdx];downloadPhoto(typeof p==='string'?p:p.src,lbIdx,$('lbMsg'))}};
+function saveBlob(blob,filename){const u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download=filename;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),2000)}
+async function downloadPhoto(dataUrl,i,msgEl){
+ const msg=msgEl||$('photoMsg');msg.textContent='';
+ try{saveBlob(await (await fetch(dataUrl)).blob(),'worklog-photo-'+today+'-'+(i+1)+'.jpg')}
+ catch(e){msg.textContent='Could not save that photo — long-press or right-click it to save instead.'}
+}
+function compressImage(file){return new Promise((res,rej)=>{const r=new FileReader();r.onload=e=>{const img=new Image();img.onload=()=>{const m=1000;let w=img.width,h=img.height;if(w>m||h>m){if(w>h){h=Math.round(h*m/w);w=m}else{w=Math.round(w*m/h);h=m}}const c=document.createElement('canvas');c.width=w;c.height=h;c.getContext('2d').drawImage(img,0,0,w,h);res(c.toDataURL('image/jpeg',.72))};img.onerror=()=>rej();img.src=e.target.result};r.onerror=()=>rej();r.readAsDataURL(file)})}
+$('photoIn').onchange=async()=>{
+ const files=Array.from($('photoIn').files||[]),msg=$('photoMsg');msg.textContent=files.length?'Processing…':'';
+ const d=day(today);
+ for(const f of files){try{d.photos.push({src:await compressImage(f),time:Date.now()})}catch(e){}}
+ const ok=save();$('photoIn').value='';msg.textContent=ok?'':FULL;render();
+};
+function renderTPending(){$('tPending').innerHTML=tPending.map((q,i)=>`<div class="photo"><div class="frame" style="cursor:default"><img src="${q.src}" alt="Trade photo ${i+1}"></div><button data-tp="rm" data-i="${i}" style="margin-top:3px;padding:2px 8px;font-size:.7rem">Remove</button></div>`).join('')}
+$('tPending').onclick=e=>{const b=e.target.closest('[data-tp="rm"]');if(b){tPending.splice(+b.dataset.i,1);renderTPending()}};
+$('tAddIn').onchange=async()=>{const files=Array.from($('tAddIn').files||[]),t=day(today).trades[tTarget];
+ if(t){if(!t.photos)t.photos=[];for(const f of files){try{t.photos.push({src:await compressImage(f),time:Date.now()})}catch(e){}}$('tMsg').textContent=save()?'':FULL}
+ $('tAddIn').value='';render()};
+$('trades').onclick=e=>{const b=e.target.closest('[data-t]');if(!b)return;const i=+b.dataset.i,t=day(today).trades[i];if(!t)return;
+ if(b.dataset.t==='add'){tTarget=i;$('tAddIn').click()}
+ if(b.dataset.t==='view')showLightbox(t.photos[+b.dataset.p].src,-1,true);
+ if(b.dataset.t==='rm'){t.photos.splice(+b.dataset.p,1);save();render()}};
+
+const W_METHODS={bank:'Bank',crypto:'Crypto',cash:'Cash',wallet:'Wallet',other:'Other'};
+let wPending=[];
+function renderWithdraw(){
+ $('wPending').innerHTML=wPending.map((p,i)=>`<div class="photo"><div class="frame" style="cursor:default"><img src="${p.src}" alt="Proof ${i+1}"></div><button data-w="rmpending" data-i="${i}" style="margin-top:3px;padding:2px 8px;font-size:.7rem">Remove</button></div>`).join('');
+ const all=Object.keys(data.days).flatMap(k=>{const dd=data.days[k];return (dd.withdrawals||[]).map((w,i)=>({w,k,i,cur:dd.currency||'USD'}))}).sort((a,b)=>b.w.time-a.w.time);
+ $('wList').innerHTML=all.length?all.map(e=>{const w=e.w,when=new Date(w.time).toLocaleString([],{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+  return `<li style="align-items:flex-start"><div style="flex:1;min-width:0"><b>${w.amount>0?usd(w.amount,e.cur):'Withdrawal'}</b> <small>${when}</small>${w.ref?`<div><small>${esc(w.ref)}</small></div>`:''}${(w.proofs&&w.proofs.length)?`<div class="wthumbs">${w.proofs.map((p,pi)=>`<img class="wthumb" src="${p.src}" alt="Proof ${pi+1}" data-w="view" data-wk="${e.k}" data-i="${e.i}" data-p="${pi}">`).join('')}</div>`:''}</div><button data-w="del" data-wk="${e.k}" data-i="${e.i}" aria-label="Delete withdrawal">Delete</button></li>`}).join(''):'<li class="empty">No withdrawals logged yet.</li>';
+}
+$('wProof').onchange=async()=>{const files=Array.from($('wProof').files||[]);$('wMsg').textContent=files.length?'Processing…':'';
+ for(const f of files){try{wPending.push({src:await compressImage(f),time:Date.now()})}catch(e){}}
+ $('wProof').value='';$('wMsg').textContent='';renderWithdraw()};
+$('wAdd').onclick=()=>{const msg=$('wMsg');
+ if(!wPending.length){msg.textContent='Attach at least one proof photo.';return}
+ day(today).withdrawals.push({amount:0,method:'other',ref:'',proofs:wPending,time:Date.now()});
+ const ok=save();wPending=[];msg.textContent=ok?'Withdrawal added.':FULL;renderWithdraw()};
+$('wList').onclick=e=>{const b=e.target.closest('[data-w]');if(!b)return;
+ if(b.dataset.w==='view'){const w=data.days[b.dataset.wk].withdrawals[+b.dataset.i];showLightbox(w.proofs[+b.dataset.p].src,-1,true)}
+ if(b.dataset.w==='del'){data.days[b.dataset.wk].withdrawals.splice(+b.dataset.i,1);save();renderWithdraw()}};
+$('wPending').onclick=e=>{const b=e.target.closest('[data-w="rmpending"]');if(b){wPending.splice(+b.dataset.i,1);renderWithdraw()}};
+
+const imgs=(list,sz)=>list.map(src=>`<img src="${src}" style="width:${sz}px;height:${sz}px;object-fit:cover;border-radius:6px;border:1px solid #999">`).join('');
+const tpHtml=(d,sz)=>{const ph=d.trades.flatMap(x=>(x.photos||[]).map(q=>q.src));return ph.length?`<div style="margin-top:8px"><b>Buy / Sell photos (${ph.length}):</b><div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px">${imgs(ph,sz)}</div></div>`:''};
+const wdTotal=d=>(d.withdrawals||[]).reduce((a,w)=>a+w.amount,0);
+const wdHtml=(d,sz)=>{const ws=d.withdrawals||[];if(!ws.length)return '';const pr=ws.flatMap(w=>(w.proofs||[]).map(p=>p.src));
+ return `<div style="margin-top:8px"><b>Withdrawals (total ${usd(wdTotal(d),d.currency)}):</b><table><tr><th>Time</th><th>Amount</th><th>Method</th><th>Reference</th></tr>${ws.map(w=>`<tr><td>${clk(w.time)}</td><td>${w.amount>0?usd(w.amount,d.currency):'—'}</td><td>${W_METHODS[w.method]||'Other'}</td><td>${esc(w.ref||'—')}</td></tr>`).join('')}</table>${pr.length?`<div style="margin-top:4px"><b>Withdraw proof (${pr.length}):</b><div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px">${imgs(pr,sz)}</div></div>`:''}</div>`};
+const longDate=k=>new Date(k+'T00:00').toLocaleDateString([],{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+function buildReportBody(f,t,sz,withProof){
+ const keys=Object.keys(data.days).filter(k=>k>=f&&k<=t).sort();let T=0,P=0;
+ const body=keys.map(k=>{const d=data.days[k],tk=d.tasks.reduce((a,x)=>a+x.h,0),tp=tradePL(d);T+=tk;P+=tp;
+  const ph=withProof?(d.photos||[]).map(p=>typeof p==='string'?p:p.src):[];
+  return `<div class="day"><h3>${longDate(k)}</h3><table><tr><th>Tasks completed (hours)</th><th>Buy / Sell (P/L)</th></tr><tr><td>${d.tasks.map(x=>(x.done?'[Done] ':'')+esc(x.n)+(x.start&&x.end?' ('+x.start+'-'+x.end+', '+hh(x.h)+')':' ('+hh(x.h)+')')).join('<br>')||'—'}<br><b>Total ${hh(tk)}</b></td><td>${d.trades.map(x=>{const p=calcProfit(x);return 'Buy '+usd(x.buy||0,d.currency)+' &rarr; Sell '+usd(x.sell||0,d.currency)+' ('+(p>=0?'+':'')+usd(p,d.currency)+')'}).join('<br>')||'—'}<br><b>Total ${usd(tp,d.currency)}</b></td></tr></table>${tpHtml(d,sz)}${wdHtml(d,sz)}${ph.length?`<div style="margin-top:8px"><b>Proof (${ph.length}):</b><div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px">${imgs(ph,sz)}</div></div>`:''}</div>`}).join('');
+ return{keys,T,P,body};
+}
+function buildReportText(f,t){
+ const keys=Object.keys(data.days).filter(k=>k>=f&&k<=t).sort();let T=0,P=0;
+ const out=keys.map(k=>{const d=data.days[k],cur=d.currency||'USD',tk=(d.tasks||[]).reduce((a,x)=>a+x.h,0),tp=tradePL(d);T+=tk;P+=tp;
+  const L=[longDate(k)];
+  (d.tasks||[]).forEach(x=>L.push('  Task: '+(x.n||'—')+' ('+x.start+'-'+x.end+', '+hh(x.h)+')'));L.push('  Task total: '+hh(tk));
+  (d.trades||[]).forEach(x=>L.push('  Buy '+usd(x.buy||0,cur)+' -> Sell '+usd(x.sell||0,cur)+' ('+(calcProfit(x)>=0?'+':'')+usd(calcProfit(x),cur)+')'));L.push('  P/L total: '+(tp>=0?'+':'')+usd(tp,cur));
+  (d.withdrawals||[]).forEach(w=>L.push('  Withdrawal: '+usd(w.amount,cur)+' '+(W_METHODS[w.method]||'Other')+(w.ref?' ('+w.ref+')':'')));
+  return L.join('\n')});
+ return 'Trading Work Log Report\n'+f+' to '+t+' | Days: '+keys.length+' | Task hours '+hh(T)+' | Net P/L '+(P>=0?'+':'')+P.toFixed(2)+'\n\n'+(out.join('\n\n')||'No entries in this range.')}
+function renderReportPreview(){
+ const f=$('from').value,t=$('to').value,{keys,T,P,body}=buildReportBody(f,t,56,false);
+ $('reportPreview').innerHTML=`<p class="sum">${f} to ${t} &nbsp;|&nbsp; Days: ${keys.length} &nbsp;|&nbsp; Task hours <b>${hh(T)}</b> &nbsp;|&nbsp; Net P/L <b class="${P>0?'pl-pos':(P<0?'pl-neg':'')}">${P>=0?'+':''}${P.toFixed(2)}</b></p>${body||'<p class="empty">No entries in this range.</p>'}<div class="row" style="margin-top:10px"><button id="previewPdf" class="pri">Download PDF</button><button id="previewPrint">Print</button></div>`;
+ $('previewPdf').onclick=()=>$('pdf').click();
+ $('previewPrint').onclick=()=>$('print').click();
+}
+$('from').onchange=renderReportPreview;$('to').onchange=renderReportPreview;
+const wk=new Date();wk.setDate(wk.getDate()-6);$('from').value=key(wk);$('to').value=today;
+$('print').onclick=()=>{const f=$('from').value,t=$('to').value,{keys,T,body}=buildReportBody(f,t,90,true);
+ $('report').innerHTML=`<h1>Trading Work Log Report</h1><p>${f} to ${t} &nbsp;|&nbsp; Days logged: ${keys.length}<br><b>Task hours ${hh(T)}</b></p>${body||'<p>No entries in this range.</p>'}`;window.print()};
+$('pdf').onclick=async()=>{
+ const msg=$('pdfMsg');msg.textContent='Preparing PDF…';
+ const f=$('from').value,t=$('to').value,keys=Object.keys(data.days).filter(k=>k>=f&&k<=t).sort();
+ if(!window.jspdf){$('print').click();return}
+ const doc=new jspdf.jsPDF({unit:'pt',format:'a4'}),W=doc.internal.pageSize.getWidth(),H=doc.internal.pageSize.getHeight(),M=40;let y=M;
+ const line=(txt,size,bold,ind)=>{doc.setFont('helvetica',bold?'bold':'normal');doc.setFontSize(size);doc.splitTextToSize(String(txt),W-2*M-(ind||0)).forEach(s=>{if(y>H-M){doc.addPage();y=M}doc.text(s,M+(ind||0),y);y+=size+4})};
+ const loadImg=src=>new Promise(res=>{const img=new Image();img.onload=()=>res({w:img.naturalWidth||1,h:img.naturalHeight||1});img.onerror=()=>res(null);img.src=src});
+ const thumbs=async list=>{const tw=110,gap=8;let x=M,rowH=0;for(const src of list){const s=await loadImg(src);if(!s)continue;const dh=s.h/s.w*tw;if(x+tw>W-M){x=M;y+=rowH+gap;rowH=0}if(y+dh>H-M){doc.addPage();y=M;x=M;rowH=0}try{doc.addImage(src,'JPEG',x,y,tw,dh)}catch(e){}x+=tw+gap;rowH=Math.max(rowH,dh)}y+=rowH+8};
+ let Tt=0;const days=keys.map(k=>{const d=data.days[k],tk=d.tasks.reduce((a,x)=>a+x.h,0);Tt+=tk;return{k,d,tk,tp:tradePL(d)}});
+ line('Trading Work Log Report',20,true);y+=2;line(f+' to '+t+'   |   Days logged: '+keys.length,11);line('Task hours '+hh(Tt),11,true);y+=8;
+ if(!days.length)line('No entries in this range.',11);
+ for(const {k,d,tk,tp} of days){
+  y+=6;line(new Date(k+'T00:00').toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'}),13,true);
+  line('Tasks completed  (total '+hh(tk)+')',10,true);
+  d.tasks.length?d.tasks.forEach(x=>line((x.done?'[Done] ':'')+x.n+(x.start&&x.end?' ('+x.start+'-'+x.end+', '+hh(x.h)+')':' ('+hh(x.h)+')'),10,false,10)):line('-',10,false,10);
+  line('Buy / Sell  (total P/L '+usd(tp,d.currency)+')',10,true);
+  d.trades.length?d.trades.forEach(x=>{const p=calcProfit(x);line('Buy '+usd(x.buy||0,d.currency)+' -> Sell '+usd(x.sell||0,d.currency)+' ('+(p>=0?'+':'')+usd(p,d.currency)+')',10,false,10)}):line('-',10,false,10);
+  const tph=d.trades.flatMap(x=>(x.photos||[]).map(q=>q.src));
+  if(tph.length){y+=4;line('Buy / Sell photos ('+tph.length+')',10,true);await thumbs(tph)}
+  const wds=d.withdrawals||[];
+  if(wds.length){line('Withdrawals  (total '+usd(wdTotal(d),d.currency)+')',10,true);wds.forEach(w=>line(clk(w.time)+'  '+usd(w.amount,d.currency)+'  '+(W_METHODS[w.method]||'Other')+(w.ref?'  - '+w.ref:''),10,false,10));
+   const wp=wds.flatMap(w=>(w.proofs||[]).map(q=>q.src));if(wp.length){y+=4;line('Withdraw proof ('+wp.length+')',10,true);await thumbs(wp)}}
+  const ph=(d.photos||[]).map(p=>typeof p==='string'?p:p.src);
+  if(ph.length){y+=4;line('Proof ('+ph.length+')',10,true);await thumbs(ph)}
+  y+=4;
+ }
+ try{doc.save('trading-work-log-'+f+'-to-'+t+'.pdf');msg.textContent=''}catch(e){msg.textContent='Could not save the PDF — opening print view instead.';$('print').click()}
+};
+
+/* ---- Local-only storage (data stays in this browser) ---- */
+var isViewer=false;
+function queueShare(){}
+const KEEP_DAYS=30;
+function pruneOld(){const cutoff=key(Date.now()-KEEP_DAYS*86400000);let n=0;
+ Object.keys(data.days).forEach(k=>{if(k<cutoff){delete data.days[k];n++}});
+ if(n)saveLocal();
+ if($('from').value<cutoff)$('from').value=cutoff;
+ render()}
+function enterReadOnlyLocal(){isViewer=true;$('pinLock').hidden=true;document.body.dataset.role='viewer';document.body.dataset.view='home';
+ $('roBanner').textContent='Read-only view (wrong PIN). Refresh the page to enter the PIN again.';
+ const ks=Object.keys(data.days).sort();$('from').value=ks[0]||today;$('to').value=(ks[ks.length-1]||'')>today?ks[ks.length-1]:today;render();renderWithdraw();window.scrollTo(0,0)}
+/* ---- PIN lock ---- */
+(function(){
+ const HASH='fb61c18ed3578a5ae7d5ebd47d8b8808d247ecb25bc46a4ce715b128866a33f9',box=$('pinLock');
+ const sha=async t=>Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(t)))).map(b=>b.toString(16).padStart(2,'0')).join('');
+ let ok=false;try{ok=sessionStorage.getItem('wl-unlocked')==='1'}catch(e){}
+ if(ok){box.hidden=true;pruneOld();return}
+ const tryPin=async()=>{let v='';try{v=await sha('worklog:'+$('pinIn').value.trim())}catch(e){}
+  if(v===HASH){try{sessionStorage.setItem('wl-unlocked','1')}catch(e){}box.hidden=true;$('pinIn').value='';$('pinMsg').textContent='';pruneOld()}
+  else{$('pinIn').value='';enterReadOnlyLocal()}};
+ $('pinBtn').onclick=tryPin;$('pinIn').onkeydown=e=>{if(e.key==='Enter')tryPin()};
+ setTimeout(()=>$('pinIn').focus(),50);
+})();
+render();
+</script>
+</body>
+</html>
